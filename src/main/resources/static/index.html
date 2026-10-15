@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年代・性別アンケート</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f1f5f9;
+            font-family: sans-serif;
+        }
+
+        .container {
+            width: min(92%, 1500px);
+            min-height: 900px;
+            padding: 60px;
+            background: white;
+            border-radius: 48px;
+            text-align: center;
+            box-shadow: 0 8px 28px #00000015;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 24px;
+        }
+
+        p {
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        button {
+            min-height: 180px;
+            border: none;
+            border-radius: 24px;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            background: #2563eb;
+            cursor: pointer;
+            transition: transform 0.1s ease-in-out;}
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        .female {
+            background: #db2777;
+        }
+
+        .age-button {
+            background: #16a34a;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <section id="gender-screen">
+            <h1>性別を選択</h1>
+            <p>該当するボタンを押してください</p>
+            <div class="buttons">
+                <button onclick="selectGender('男性')">男性</button>
+                <button class="female" onclick="selectGender('女性')">女性</button>
+            </div>
+        </section>
+
+        <section id="age-screen" class="hidden">
+            <h1>年代を選択</h1>
+            <p>該当する年代を押してください</p>
+            <div class="buttons">
+                <button class="age-button" onclick="submitAnswer('10代')">10代</button>
+                <button class="age-button" onclick="submitAnswer('20代')">20代</button>
+                <button class="age-button" onclick="submitAnswer('30代')">30代</button>
+                <button class="age-button" onclick="submitAnswer('40代')">40代</button>
+                <button class="age-button" onclick="submitAnswer('50代')">50代</button>
+                <button class="age-button" onclick="submitAnswer('60代以上')">60代以上</button>
+            </div>
+            <button onclick="backToGender()"
+                style="margin-top:20px; width:100%; min-height:55px; background:#64748b;">
+                戻る
+            </button>
+        </section>
+
+        <section id="complete-screen" class="hidden">
+            <h1>回答ありがとうございます！</h1>
+            <p>ご協力ありがとうございました。</p>
+        </section>
+    </main>
+
+    <script>
+        let selectedGender = "";
+
+        function selectGender(gender) {
+            selectedGender = gender;
+            document.getElementById("gender-screen").classList.add("hidden");
+            document.getElementById("age-screen").classList.remove("hidden");
+        }
+
+        async function submitAnswer(age) {
+            try {
+                const response = await fetch("/api/answers", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        gender: selectedGender,
+                        ageGroup: age
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("保存に失敗しました");
+                }
+
+                document.getElementById("age-screen").classList.add("hidden");
+                document.getElementById("complete-screen").classList.remove("hidden");
+
+                setTimeout(() => {
+                    document.getElementById("complete-screen").classList.add("hidden");
+                    document.getElementById("gender-screen").classList.remove("hidden");
+                    selectedGender = "";
+                }, 1500);
+
+            } catch (error) {
+                alert("回答を保存できませんでした。もう一度お試しください。");
+            }
+        }
+
+        function backToGender() {
+            document.getElementById("age-screen").classList.add("hidden");
+            document.getElementById("gender-screen").classList.remove("hidden");
+        }
+    </script>
+</body>
+</html>
+```
