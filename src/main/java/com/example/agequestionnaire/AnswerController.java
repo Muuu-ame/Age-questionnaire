@@ -1,5 +1,8 @@
 package com.example.agequestionnaire;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,53 +20,73 @@ import java.time.format.DateTimeFormatter;
 @RestController
 public class AnswerController {
 
-    private static final Path CSV_PATH = Path.of("responses.csv");
+    private static final Logger log =
+            LoggerFactory.getLogger(AnswerController.class);
 
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    @Value("${survey.csv.path:data/responses.csv}")
+    private String csvFilePath;
+
     public static class Answer {
         public String gender;
         public String ageGroup;
+        public String favoriteGame;
     }
 
     @PostMapping("/api/answers")
     public synchronized ResponseEntity<String> saveAnswer(
-            @RequestBody Answer answer) {
+            @RequestBody(required = false) Answer answer) {
 
+        // 入力チェック
         if (answer == null
-                || !("男性".equals(answer.gender)
-                || "女性".equals(answer.gender))
-                || !("10代".equals(answer.ageGroup)
-                || "20代".equals(answer.ageGroup)
-                || "30代".equals(answer.ageGroup)
-                || "40代".equals(answer.ageGroup)
-                || "50代".equals(answer.ageGroup)
-                || "60代以上".equals(answer.ageGroup))) {
+                || !isAllowed(answer.gender,
+                        "男性", "女性")
+                || !isAllowed(answer.ageGroup,
+                        "10代以下", "20代", "30代",
+                        "40代", "50代", "60代以上")
+                || !isAllowed(answer.favoriteGame,
+                        "Game1", "Game2", "Game3",
+                        "Game4", "Game5", "Game6",
+                        "Game7", "Game8", "Game9")) {
 
-            return ResponseEntity.badRequest().body("Invalid answer");
+            return ResponseEntity.badRequest()
+                    .body("Invalid answer");
         }
 
         try {
-            boolean newFile = !Files.exists(CSV_PATH)
-                    || Files.size(CSV_PATH) == 0;
+            Path csvPath = Path.of(csvFilePath)
+                    .toAbsolutePath()
+                    .normalize();
+
+            Path parent = csvPath.getParent();
+
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+
+            boolean newFile = !Files.exists(csvPath)
+                    || Files.size(csvPath) == 0;
 
             StringBuilder csv = new StringBuilder();
 
             if (newFile) {
                 // Excelで日本語を読みやすくするためのUTF-8 BOM
                 csv.append('\uFEFF');
-                csv.append("回答日時,性別,年代\n");
+                csv.append("回答日時,性別,年代,一番面白かったゲーム\n");
             }
 
-            String timestamp = LocalDateTime.now().format(FORMATTER);
+            String timestamp =
+                    LocalDateTime.now().format(FORMATTER);
 
             csv.append(timestamp).append(',')
-               .append(answer.gender).append(',')
-               .append(answer.ageGroup).append('\n');
+                    .append(answer.gender).append(',')
+                    .append(answer.ageGroup).append(',')
+                    .append(answer.favoriteGame).append('\n');
 
             Files.writeString(
-                    CSV_PATH,
+                    csvPath,
                     csv.toString(),
                     StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE,
@@ -72,12 +95,26 @@ public class AnswerController {
 
             return ResponseEntity.ok("Saved");
 
-        } catch (IOException e) {
-            e.printStackTrace();
-
+        } catch (IOException | SecurityException e) {
+            // 回答内容やファイルの絶対パスをログに出さない
+            log.error("アンケート回答の保存に失敗しました");
             return ResponseEntity.status(
                     HttpStatus.INTERNAL_SERVER_ERROR
             ).body("Save failed");
         }
+    }
+
+    private boolean isAllowed(String value, String... allowed) {
+        if (value == null) {
+            return false;
+        }
+
+        for (String item : allowed) {
+            if (item.equals(value)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
