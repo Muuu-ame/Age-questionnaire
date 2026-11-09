@@ -1,3 +1,4 @@
+
 package com.example.agequestionnaire;
 
 import org.slf4j.Logger;
@@ -26,15 +27,19 @@ public class AnswerController {
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    // CSV保存先
     @Value("${survey.csv.path:data/responses.csv}")
     private String csvFilePath;
 
+    // アンケート回答データ
     public static class Answer {
         public String gender;
         public String ageGroup;
         public String favoriteGame;
+        public String comment;
     }
 
+    // アンケート回答を保存
     @PostMapping("/api/answers")
     public synchronized ResponseEntity<String> saveAnswer(
             @RequestBody(required = false) Answer answer) {
@@ -49,42 +54,55 @@ public class AnswerController {
                 || !isAllowed(answer.favoriteGame,
                         "Game1", "Game2", "Game3",
                         "Game4", "Game5", "Game6",
-                        "Game7", "Game8", "Game9")) {
+                        "Game7", "Game8", "Game9")
+                || (answer.comment != null
+                        && answer.comment.length() > 500)) {
 
             return ResponseEntity.badRequest()
                     .body("Invalid answer");
         }
 
         try {
+            // CSVファイルのパスを取得
             Path csvPath = Path.of(csvFilePath)
                     .toAbsolutePath()
                     .normalize();
 
             Path parent = csvPath.getParent();
 
+            // 保存先フォルダがなければ作成
             if (parent != null) {
                 Files.createDirectories(parent);
             }
 
+            // 新規ファイルか確認
             boolean newFile = !Files.exists(csvPath)
                     || Files.size(csvPath) == 0;
 
             StringBuilder csv = new StringBuilder();
 
             if (newFile) {
-                // Excelで日本語を読みやすくするためのUTF-8 BOM
+                // Excel用UTF-8 BOM
                 csv.append('\uFEFF');
-                csv.append("回答日時,性別,年代,一番面白かったゲーム\n");
+
+                // CSVヘッダー
+                csv.append(
+                    "回答日時,性別,年代,一番面白かったゲーム,コメント\n"
+                );
             }
 
+            // 回答日時
             String timestamp =
                     LocalDateTime.now().format(FORMATTER);
 
-            csv.append(timestamp).append(',')
-                    .append(answer.gender).append(',')
-                    .append(answer.ageGroup).append(',')
-                    .append(answer.favoriteGame).append('\n');
+            // CSVデータ作成
+            csv.append(escapeCsv(timestamp)).append(',')
+                    .append(escapeCsv(answer.gender)).append(',')
+                    .append(escapeCsv(answer.ageGroup)).append(',')
+                    .append(escapeCsv(answer.favoriteGame)).append(',')
+                    .append(escapeCsv(answer.comment)).append('\n');
 
+            // CSVファイルに保存
             Files.writeString(
                     csvPath,
                     csv.toString(),
@@ -96,15 +114,19 @@ public class AnswerController {
             return ResponseEntity.ok("Saved");
 
         } catch (IOException | SecurityException e) {
-            // 回答内容やファイルの絶対パスをログに出さない
+
+            // 回答内容や絶対パスはログに出さない
             log.error("アンケート回答の保存に失敗しました");
+
             return ResponseEntity.status(
                     HttpStatus.INTERNAL_SERVER_ERROR
             ).body("Save failed");
         }
     }
 
+    // 許可された値か確認
     private boolean isAllowed(String value, String... allowed) {
+
         if (value == null) {
             return false;
         }
@@ -116,5 +138,21 @@ public class AnswerController {
         }
 
         return false;
+    }
+
+    // CSV用の文字列変換
+    private String escapeCsv(String value) {
+
+        if (value == null) {
+            value = "";
+        }
+
+        // Excelで数式として解釈されることを防止
+        if (value.matches("^[\\s\\u0000-\\u001F]*[=+\\-@].*")) {
+            value = "'" + value;
+        }
+
+        // ダブルクォーテーションをエスケープ
+        return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 }

@@ -2,8 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>アンケート</title>
 
@@ -104,6 +103,32 @@
             font-size: clamp(20px, 3vw, 28px);
         }
 
+        .submit-button {
+            width: 100%;
+            min-height: 72px;
+            margin-top: 12px;
+            background: #2563eb;
+            font-size: clamp(20px, 3vw, 28px);
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            min-height: 180px;
+            margin: 20px 0 10px;
+            padding: 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 14px;
+            font: inherit;
+            font-size: 18px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: 3px solid #93c5fd;
+            border-color: #2563eb;
+        }
+
         .hidden {
             display: none !important;
         }
@@ -160,10 +185,10 @@
         <p>該当するボタンを押してください</p>
 
         <div class="buttons gender-buttons">
-            <button type="button"
-                    onclick="selectGender('男性')">
+            <button type="button" onclick="selectGender('男性')">
                 男性
             </button>
+
             <button type="button"
                     class="female"
                     onclick="selectGender('女性')">
@@ -180,14 +205,19 @@
         <div class="buttons">
             <button type="button" class="age-button"
                     onclick="selectAge('10代以下')">10代以下</button>
+
             <button type="button" class="age-button"
                     onclick="selectAge('20代')">20代</button>
+
             <button type="button" class="age-button"
                     onclick="selectAge('30代')">30代</button>
+
             <button type="button" class="age-button"
                     onclick="selectAge('40代')">40代</button>
+
             <button type="button" class="age-button"
                     onclick="selectAge('50代')">50代</button>
+
             <button type="button" class="age-button"
                     onclick="selectAge('60代以上')">60代以上</button>
         </div>
@@ -204,26 +234,66 @@
         <div class="buttons game-buttons">
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game1')">Game1</button>
+
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game2')">Game2</button>
+
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game3')">Game3</button>
+
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game4')">Game4</button>
+
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game5')">Game5</button>
+
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game6')">Game6</button>
+
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game7')">Game7</button>
+
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game8')">Game8</button>
+
             <button type="button" class="game-button"
                     onclick="submitAnswer('Game9')">飛行機</button>
         </div>
 
         <button type="button" class="back-button"
                 onclick="backToAge()">戻る</button>
+    </section>
+
+    <!-- コメント入力 -->
+    <section id="comment-screen" class="hidden">
+        <h1>感想・コメント</h1>
+
+        <p>ゲームの感想などがあれば自由に入力してください（任意）</p>
+
+        <textarea
+            id="message"
+            name="message"
+            rows="6"
+            maxlength="500"
+            placeholder="ここに入力してください（500文字以内）"
+            oninput="updateCharCount()"></textarea>
+
+        <p id="char-count">0 / 500文字</p>
+
+        <button
+            type="button"
+            class="submit-button"
+            id="comment-submit-button"
+            onclick="submitComment()">
+            完了
+        </button>
+
+        <button
+            type="button"
+            class="back-button"
+            onclick="backToGame()">
+            戻る
+        </button>
     </section>
 
     <!-- 完了画面 -->
@@ -233,8 +303,7 @@
     </section>
 
     <!-- エラー表示 -->
-    <p id="error-message" class="error hidden"
-       role="alert"></p>
+    <p id="error-message" class="error hidden" role="alert"></p>
 
 </main>
 
@@ -243,6 +312,8 @@
 
     let selectedGender = "";
     let selectedAgeGroup = "";
+    let selectedGame = "";
+
     let isSubmitting = false;
     let completionTimer = null;
 
@@ -250,9 +321,11 @@
         "gender-screen",
         "age-screen",
         "game-screen",
+        "comment-screen",
         "complete-screen"
     ];
 
+    // 画面切り替え
     function showScreen(screenId) {
         screenIds.forEach(id => {
             document.getElementById(id).classList.toggle(
@@ -264,24 +337,29 @@
         clearError();
     }
 
+    // エラー表示
     function showError(message) {
         const error = document.getElementById("error-message");
         error.textContent = message;
         error.classList.remove("hidden");
     }
 
+    // エラー消去
     function clearError() {
         const error = document.getElementById("error-message");
         error.textContent = "";
         error.classList.add("hidden");
     }
 
-    function setGameButtonsDisabled(disabled) {
-        document.querySelectorAll(".game-button").forEach(button => {
-            button.disabled = disabled;
-        });
+    // 文字数カウント
+    function updateCharCount() {
+        const comment = document.getElementById("message").value;
+
+        document.getElementById("char-count").textContent =
+            `${comment.length} / 500文字`;
     }
 
+    // 性別選択
     function selectGender(gender) {
         if (isSubmitting) return;
 
@@ -293,6 +371,7 @@
         showScreen("age-screen");
     }
 
+    // 年代選択
     function selectAge(ageGroup) {
         if (isSubmitting) return;
 
@@ -304,15 +383,17 @@
         if (!allowed.includes(ageGroup)) return;
 
         selectedAgeGroup = ageGroup;
+
         showScreen("game-screen");
     }
 
-    async function submitAnswer(favoriteGame) {
+    // ゲーム選択
+    function submitAnswer(favoriteGame) {
         if (isSubmitting) return;
 
         if (!selectedGender || !selectedAgeGroup) {
-            showError("性別と年代を選択し直してください。");
             showScreen("gender-screen");
+            showError("性別と年代を選択し直してください。");
             return;
         }
 
@@ -324,21 +405,54 @@
 
         if (!allowedGames.includes(favoriteGame)) return;
 
+        selectedGame = favoriteGame;
+
+        // ここではまだ送信しない
+        showScreen("comment-screen");
+    }
+
+    // コメント送信・CSV保存
+    async function submitComment() {
+        if (isSubmitting) return;
+
+        if (!selectedGender || !selectedAgeGroup || !selectedGame) {
+            showScreen("gender-screen");
+            showError("最初から回答を選択してください。");
+            return;
+        }
+
+        const comment =
+            document.getElementById("message").value.trim();
+
+        if (comment.length > 500) {
+            showError("コメントは500文字以内で入力してください。");
+            return;
+        }
+
         isSubmitting = true;
-        setGameButtonsDisabled(true);
+
+        const submitButton =
+            document.getElementById("comment-submit-button");
+
+        submitButton.disabled = true;
+
         clearError();
 
         try {
             const response = await fetch("/api/answers", {
                 method: "POST",
+
                 headers: {
                     "Content-Type": "application/json"
                 },
+
                 cache: "no-store",
+
                 body: JSON.stringify({
                     gender: selectedGender,
                     ageGroup: selectedAgeGroup,
-                    favoriteGame: favoriteGame
+                    favoriteGame: selectedGame,
+                    comment: comment
                 })
             });
 
@@ -346,40 +460,64 @@
                 throw new Error("保存に失敗しました");
             }
 
+            // 保存成功
             showScreen("complete-screen");
 
             clearTimeout(completionTimer);
 
+            // 2.5秒後に初期画面へ戻る
             completionTimer = setTimeout(() => {
                 selectedGender = "";
                 selectedAgeGroup = "";
+                selectedGame = "";
+
+                document.getElementById("message").value = "";
+                updateCharCount();
+
                 showScreen("gender-screen");
-            }, 2000);
+            }, 2500);
 
         } catch (error) {
             showError(
                 "回答を保存できませんでした。通信状態を確認して、もう一度お試しください。"
             );
+
         } finally {
             isSubmitting = false;
-            setGameButtonsDisabled(false);
+            submitButton.disabled = false;
         }
     }
 
+    // 性別選択画面へ戻る
     function backToGender() {
         if (isSubmitting) return;
 
         selectedGender = "";
         selectedAgeGroup = "";
+        selectedGame = "";
+
         showScreen("gender-screen");
     }
 
+    // 年代選択画面へ戻る
     function backToAge() {
         if (isSubmitting) return;
 
         selectedAgeGroup = "";
+        selectedGame = "";
+
         showScreen("age-screen");
     }
+
+    // ゲーム選択画面へ戻る
+    function backToGame() {
+        if (isSubmitting) return;
+
+        selectedGame = "";
+
+        showScreen("game-screen");
+    }
+
 </script>
 </body>
 </html>
