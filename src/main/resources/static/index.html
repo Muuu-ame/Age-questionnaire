@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>年代・性別アンケート</title>
+    <meta name="referrer" content="no-referrer">
+    <title>アンケート</title>
+
     <style>
         * {
             box-sizing: border-box;
@@ -12,6 +14,8 @@
         body {
             margin: 0;
             min-height: 100vh;
+            min-height: 100dvh;
+            padding: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,48 +24,62 @@
         }
 
         .container {
-            width: min(92%, 1500px);
-            min-height: 900px;
-            padding: 60px;
+            width: min(100%, 1000px);
+            min-height: min(75dvh, 700px);
+            max-height: 94dvh;
+            overflow-y: auto;
+            padding: clamp(20px, 4vw, 60px);
             background: white;
-            border-radius: 48px;
+            border-radius: 32px;
             text-align: center;
             box-shadow: 0 8px 28px #00000015;
-
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
 
         h1 {
-            font-size: 48px;
-            margin-bottom: 24px;
+            font-size: clamp(26px, 4vw, 48px);
+            line-height: 1.35;
+            margin: 0 0 20px;
         }
 
         p {
             color: #64748b;
-            margin-bottom: 32px;
+            font-size: clamp(14px, 2vw, 20px);
+            margin: 0 0 28px;
         }
 
         .buttons {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: clamp(10px, 2vw, 20px);
         }
 
         button {
-            min-height: 180px;
+            min-width: 0;
+            min-height: clamp(85px, 15dvh, 180px);
+            padding: 12px;
             border: none;
-            border-radius: 24px;
-            font-size: 48px;
+            border-radius: 20px;
+            font-size: clamp(23px, 4vw, 42px);
             font-weight: bold;
             color: white;
             background: #2563eb;
             cursor: pointer;
-            transition: transform 0.1s ease-in-out;}
+            touch-action: manipulation;
+            overflow-wrap: anywhere;
+        }
 
-        button:active {
-            transform: scale(0.97);
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        button:focus-visible {
+            outline: 4px solid #0f172a;
+            outline-offset: 3px;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: wait;
         }
 
         .female {
@@ -72,90 +90,434 @@
             background: #16a34a;
         }
 
+        .game-button {
+            background: #f59e0b;
+            color: #1f2937;
+        }
+
+        .back-button {
+            width: 100%;
+            min-height: 64px;
+            margin-top: 20px;
+            background: #64748b;
+            font-size: clamp(20px, 3vw, 28px);
+        }
+
+        .submit-button {
+            width: 100%;
+            min-height: 72px;
+            margin-top: 12px;
+            background: #2563eb;
+            font-size: clamp(20px, 3vw, 28px);
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            min-height: 180px;
+            margin: 20px 0 10px;
+            padding: 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 14px;
+            font: inherit;
+            font-size: 18px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: 3px solid #93c5fd;
+            border-color: #2563eb;
+        }
+
         .hidden {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <main class="container">
-        <section id="gender-screen">
-            <h1>性別を選択</h1>
-            <p>該当するボタンを押してください</p>
-            <div class="buttons">
-                <button onclick="selectGender('男性')">男性</button>
-                <button class="female" onclick="selectGender('女性')">女性</button>
-            </div>
-        </section>
-
-        <section id="age-screen" class="hidden">
-            <h1>年代を選択</h1>
-            <p>該当する年代を押してください</p>
-            <div class="buttons">
-                <button class="age-button" onclick="submitAnswer('10代')">10代</button>
-                <button class="age-button" onclick="submitAnswer('20代')">20代</button>
-                <button class="age-button" onclick="submitAnswer('30代')">30代</button>
-                <button class="age-button" onclick="submitAnswer('40代')">40代</button>
-                <button class="age-button" onclick="submitAnswer('50代')">50代</button>
-                <button class="age-button" onclick="submitAnswer('60代以上')">60代以上</button>
-            </div>
-            <button onclick="backToGender()"
-                style="margin-top:20px; width:100%; min-height:55px; background:#64748b;">
-                戻る
-            </button>
-        </section>
-
-        <section id="complete-screen" class="hidden">
-            <h1>回答ありがとうございます！</h1>
-            <p>ご協力ありがとうございました。</p>
-        </section>
-    </main>
-
-    <script>
-        let selectedGender = "";
-
-        function selectGender(gender) {
-            selectedGender = gender;
-            document.getElementById("gender-screen").classList.add("hidden");
-            document.getElementById("age-screen").classList.remove("hidden");
+            display: none !important;
         }
 
-        async function submitAnswer(age) {
-            try {
-                const response = await fetch("/api/answers", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        gender: selectedGender,
-                        ageGroup: age
-                    })
-                });
+        .error {
+            margin-top: 20px;
+            color: #b91c1c;
+            font-weight: bold;
+            font-size: 18px;
+        }
 
-                if (!response.ok) {
-                    throw new Error("保存に失敗しました");
-                }
+        @media (min-width: 700px) {
+            .gender-buttons {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
 
-                document.getElementById("age-screen").classList.add("hidden");
-                document.getElementById("complete-screen").classList.remove("hidden");
-
-                setTimeout(() => {
-                    document.getElementById("complete-screen").classList.add("hidden");
-                    document.getElementById("gender-screen").classList.remove("hidden");
-                    selectedGender = "";
-                }, 1500);
-
-            } catch (error) {
-                alert("回答を保存できませんでした。もう一度お試しください。");
+            .game-buttons {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
 
-        function backToGender() {
-            document.getElementById("age-screen").classList.add("hidden");
-            document.getElementById("gender-screen").classList.remove("hidden");
+        @media (max-height: 600px) {
+            body {
+                align-items: flex-start;
+            }
+
+            .container {
+                min-height: 0;
+                max-height: none;
+            }
+
+            button {
+                min-height: 70px;
+            }
         }
-    </script>
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="container">
+
+    <!-- 性別選択 -->
+    <section id="gender-screen">
+        <h1>性別を選択</h1>
+        <p>該当するボタンを押してください</p>
+
+        <div class="buttons gender-buttons">
+            <button type="button" onclick="selectGender('男性')">
+                男性
+            </button>
+
+            <button type="button"
+                    class="female"
+                    onclick="selectGender('女性')">
+                女性
+            </button>
+        </div>
+    </section>
+
+    <!-- 年代選択 -->
+    <section id="age-screen" class="hidden">
+        <h1>年代を選択</h1>
+        <p>該当する年代を押してください</p>
+
+        <div class="buttons">
+            <button type="button" class="age-button"
+                    onclick="selectAge('10代以下')">10代以下</button>
+
+            <button type="button" class="age-button"
+                    onclick="selectAge('20代')">20代</button>
+
+            <button type="button" class="age-button"
+                    onclick="selectAge('30代')">30代</button>
+
+            <button type="button" class="age-button"
+                    onclick="selectAge('40代')">40代</button>
+
+            <button type="button" class="age-button"
+                    onclick="selectAge('50代')">50代</button>
+
+            <button type="button" class="age-button"
+                    onclick="selectAge('60代以上')">60代以上</button>
+        </div>
+
+        <button type="button" class="back-button"
+                onclick="backToGender()">戻る</button>
+    </section>
+
+    <!-- ゲーム選択 -->
+    <section id="game-screen" class="hidden">
+        <h1>一番面白かったゲームは？</h1>
+        <p>該当するゲームを押してください</p>
+
+        <div class="buttons game-buttons">
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game1')">Game1</button>
+
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game2')">Game2</button>
+
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game3')">Game3</button>
+
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game4')">Game4</button>
+
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game5')">Game5</button>
+
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game6')">Game6</button>
+
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game7')">Game7</button>
+
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game8')">Game8</button>
+
+            <button type="button" class="game-button"
+                    onclick="submitAnswer('Game9')">飛行機</button>
+        </div>
+
+        <button type="button" class="back-button"
+                onclick="backToAge()">戻る</button>
+    </section>
+
+    <!-- コメント入力 -->
+    <section id="comment-screen" class="hidden">
+        <h1>感想・コメント</h1>
+
+        <p>ゲームの感想などがあれば自由に入力してください（任意）</p>
+
+        <textarea
+            id="message"
+            name="message"
+            rows="6"
+            maxlength="500"
+            placeholder="ここに入力してください（500文字以内）"
+            oninput="updateCharCount()"></textarea>
+
+        <p id="char-count">0 / 500文字</p>
+
+        <button
+            type="button"
+            class="submit-button"
+            id="comment-submit-button"
+            onclick="submitComment()">
+            完了
+        </button>
+
+        <button
+            type="button"
+            class="back-button"
+            onclick="backToGame()">
+            戻る
+        </button>
+    </section>
+
+    <!-- 完了画面 -->
+    <section id="complete-screen" class="hidden" aria-live="polite">
+        <h1>回答ありがとうございます！</h1>
+        <p>ご協力ありがとうございました。</p>
+    </section>
+
+    <!-- エラー表示 -->
+    <p id="error-message" class="error hidden" role="alert"></p>
+
+</main>
+
+<script>
+    "use strict";
+
+    let selectedGender = "";
+    let selectedAgeGroup = "";
+    let selectedGame = "";
+
+    let isSubmitting = false;
+    let completionTimer = null;
+
+    const screenIds = [
+        "gender-screen",
+        "age-screen",
+        "game-screen",
+        "comment-screen",
+        "complete-screen"
+    ];
+
+    // 画面切り替え
+    function showScreen(screenId) {
+        screenIds.forEach(id => {
+            document.getElementById(id).classList.toggle(
+                "hidden",
+                id !== screenId
+            );
+        });
+
+        clearError();
+    }
+
+    // エラー表示
+    function showError(message) {
+        const error = document.getElementById("error-message");
+        error.textContent = message;
+        error.classList.remove("hidden");
+    }
+
+    // エラー消去
+    function clearError() {
+        const error = document.getElementById("error-message");
+        error.textContent = "";
+        error.classList.add("hidden");
+    }
+
+    // 文字数カウント
+    function updateCharCount() {
+        const comment = document.getElementById("message").value;
+
+        document.getElementById("char-count").textContent =
+            `${comment.length} / 500文字`;
+    }
+
+    // 性別選択
+    function selectGender(gender) {
+        if (isSubmitting) return;
+
+        if (gender !== "男性" && gender !== "女性") return;
+
+        selectedGender = gender;
+        selectedAgeGroup = "";
+
+        showScreen("age-screen");
+    }
+
+    // 年代選択
+    function selectAge(ageGroup) {
+        if (isSubmitting) return;
+
+        const allowed = [
+            "10代以下", "20代", "30代",
+            "40代", "50代", "60代以上"
+        ];
+
+        if (!allowed.includes(ageGroup)) return;
+
+        selectedAgeGroup = ageGroup;
+
+        showScreen("game-screen");
+    }
+
+    // ゲーム選択
+    function submitAnswer(favoriteGame) {
+        if (isSubmitting) return;
+
+        if (!selectedGender || !selectedAgeGroup) {
+            showScreen("gender-screen");
+            showError("性別と年代を選択し直してください。");
+            return;
+        }
+
+        const allowedGames = [
+            "Game1", "Game2", "Game3",
+            "Game4", "Game5", "Game6",
+            "Game7", "Game8", "Game9"
+        ];
+
+        if (!allowedGames.includes(favoriteGame)) return;
+
+        selectedGame = favoriteGame;
+
+        // ここではまだ送信しない
+        showScreen("comment-screen");
+    }
+
+    // コメント送信・CSV保存
+    async function submitComment() {
+        if (isSubmitting) return;
+
+        if (!selectedGender || !selectedAgeGroup || !selectedGame) {
+            showScreen("gender-screen");
+            showError("最初から回答を選択してください。");
+            return;
+        }
+
+        const comment =
+            document.getElementById("message").value.trim();
+
+        if (comment.length > 500) {
+            showError("コメントは500文字以内で入力してください。");
+            return;
+        }
+
+        isSubmitting = true;
+
+        const submitButton =
+            document.getElementById("comment-submit-button");
+
+        submitButton.disabled = true;
+
+        clearError();
+
+        try {
+            const response = await fetch("/api/answers", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                cache: "no-store",
+
+                body: JSON.stringify({
+                    gender: selectedGender,
+                    ageGroup: selectedAgeGroup,
+                    favoriteGame: selectedGame,
+                    comment: comment
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("保存に失敗しました");
+            }
+
+            // 保存成功
+            showScreen("complete-screen");
+
+            clearTimeout(completionTimer);
+
+            // 2.5秒後に初期画面へ戻る
+            completionTimer = setTimeout(() => {
+                selectedGender = "";
+                selectedAgeGroup = "";
+                selectedGame = "";
+
+                document.getElementById("message").value = "";
+                updateCharCount();
+
+                showScreen("gender-screen");
+            }, 2500);
+
+        } catch (error) {
+            showError(
+                "回答を保存できませんでした。通信状態を確認して、もう一度お試しください。"
+            );
+
+        } finally {
+            isSubmitting = false;
+            submitButton.disabled = false;
+        }
+    }
+
+    // 性別選択画面へ戻る
+    function backToGender() {
+        if (isSubmitting) return;
+
+        selectedGender = "";
+        selectedAgeGroup = "";
+        selectedGame = "";
+
+        showScreen("gender-screen");
+    }
+
+    // 年代選択画面へ戻る
+    function backToAge() {
+        if (isSubmitting) return;
+
+        selectedAgeGroup = "";
+        selectedGame = "";
+
+        showScreen("age-screen");
+    }
+
+    // ゲーム選択画面へ戻る
+    function backToGame() {
+        if (isSubmitting) return;
+
+        selectedGame = "";
+
+        showScreen("game-screen");
+    }
+
+</script>
 </body>
 </html>
-```
