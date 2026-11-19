@@ -90,11 +90,6 @@
             background: #16a34a;
         }
 
-        .game-button {
-            background: #f59e0b;
-            color: #1f2937;
-        }
-
         .back-button {
             width: 100%;
             min-height: 64px;
@@ -140,16 +135,6 @@
             font-size: 18px;
         }
 
-        @media (min-width: 700px) {
-            .gender-buttons {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .game-buttons {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
         @media (max-height: 600px) {
             body {
                 align-items: flex-start;
@@ -189,9 +174,10 @@
                 男性
             </button>
 
-            <button type="button"
-                    class="female"
-                    onclick="selectGender('女性')">
+            <button
+                type="button"
+                class="female"
+                onclick="selectGender('女性')">
                 女性
             </button>
         </div>
@@ -226,49 +212,11 @@
                 onclick="backToGender()">戻る</button>
     </section>
 
-    <!-- ゲーム選択 -->
-    <section id="game-screen" class="hidden">
-        <h1>一番面白かったゲームは？</h1>
-        <p>該当するゲームを押してください</p>
-
-        <div class="buttons game-buttons">
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game1')">Game1</button>
-
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game2')">Game2</button>
-
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game3')">Game3</button>
-
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game4')">Game4</button>
-
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game5')">Game5</button>
-
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game6')">Game6</button>
-
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game7')">Game7</button>
-
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game8')">Game8</button>
-
-            <button type="button" class="game-button"
-                    onclick="submitAnswer('Game9')">飛行機</button>
-        </div>
-
-        <button type="button" class="back-button"
-                onclick="backToAge()">戻る</button>
-    </section>
-
     <!-- コメント入力 -->
     <section id="comment-screen" class="hidden">
         <h1>感想・コメント</h1>
 
-        <p>ゲームの感想などがあれば自由に入力してください（任意）</p>
+        <p>一番面白かったゲームなど、ゲームの感想などがあれば自由に入力してください（任意）</p>
 
         <textarea
             id="message"
@@ -291,7 +239,7 @@
         <button
             type="button"
             class="back-button"
-            onclick="backToGame()">
+            onclick="backToAge()">
             戻る
         </button>
     </section>
@@ -312,7 +260,6 @@
 
     let selectedGender = "";
     let selectedAgeGroup = "";
-    let selectedGame = "";
 
     let isSubmitting = false;
     let completionTimer = null;
@@ -320,7 +267,6 @@
     const screenIds = [
         "gender-screen",
         "age-screen",
-        "game-screen",
         "comment-screen",
         "complete-screen"
     ];
@@ -384,30 +330,6 @@
 
         selectedAgeGroup = ageGroup;
 
-        showScreen("game-screen");
-    }
-
-    // ゲーム選択
-    function submitAnswer(favoriteGame) {
-        if (isSubmitting) return;
-
-        if (!selectedGender || !selectedAgeGroup) {
-            showScreen("gender-screen");
-            showError("性別と年代を選択し直してください。");
-            return;
-        }
-
-        const allowedGames = [
-            "Game1", "Game2", "Game3",
-            "Game4", "Game5", "Game6",
-            "Game7", "Game8", "Game9"
-        ];
-
-        if (!allowedGames.includes(favoriteGame)) return;
-
-        selectedGame = favoriteGame;
-
-        // ここではまだ送信しない
         showScreen("comment-screen");
     }
 
@@ -415,9 +337,9 @@
     async function submitComment() {
         if (isSubmitting) return;
 
-        if (!selectedGender || !selectedAgeGroup || !selectedGame) {
+        if (!selectedGender || !selectedAgeGroup) {
             showScreen("gender-screen");
-            showError("最初から回答を選択してください。");
+            showError("性別と年代を選択し直してください。");
             return;
         }
 
@@ -451,7 +373,6 @@
                 body: JSON.stringify({
                     gender: selectedGender,
                     ageGroup: selectedAgeGroup,
-                    favoriteGame: selectedGame,
                     comment: comment
                 })
             });
@@ -469,7 +390,6 @@
             completionTimer = setTimeout(() => {
                 selectedGender = "";
                 selectedAgeGroup = "";
-                selectedGame = "";
 
                 document.getElementById("message").value = "";
                 updateCharCount();
@@ -494,7 +414,6 @@
 
         selectedGender = "";
         selectedAgeGroup = "";
-        selectedGame = "";
 
         showScreen("gender-screen");
     }
@@ -503,19 +422,7 @@
     function backToAge() {
         if (isSubmitting) return;
 
-        selectedAgeGroup = "";
-        selectedGame = "";
-
         showScreen("age-screen");
-    }
-
-    // ゲーム選択画面へ戻る
-    function backToGame() {
-        if (isSubmitting) return;
-
-        selectedGame = "";
-
-        showScreen("game-screen");
     }
 
 </script>
