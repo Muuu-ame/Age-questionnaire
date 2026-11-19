@@ -30,18 +30,36 @@
     	<java.version>21</java.version>
     	<tomcat.version>11.0.27</tomcat.version>
 	</properties>
-	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
-		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+	
+	<dependencies>
+    	<!-- Webアプリケーション -->
+    	<dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-webmvc</artifactId>
+    	</dependency>
+
+    	<!-- テスト -->
+    	<dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-webmvc-test</artifactId>
+        	<scope>test</scope>
+    	</dependency>
+
+    	<!-- データベース操作 -->
+    	<dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-data-jpa</artifactId>
+    	</dependency>
+
+    	<!-- PostgreSQL接続 -->
+    	<dependency>
+        	<groupId>org.postgresql</groupId>
+        	<artifactId>postgresql</artifactId>
+        	<scope>runtime</scope>
+    	</dependency>
 	</dependencies>
+
 
 	<build>
 		<plugins>
