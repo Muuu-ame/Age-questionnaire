@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vscode
+.mvn
+target
+.env
+.env.*
+!.env.example
+application-local.properties
+application-*.local.properties
+*.log
+HELP.md
