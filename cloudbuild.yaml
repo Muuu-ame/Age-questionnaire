@@ -1,10 +1,12 @@
+
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
-      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/age-questionnaire/app:$COMMIT_SHA'
+      - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/age-questionnaire/app:$BUILD_ID'
       - '.'
 
 images:
-  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/age-questionnaire/app:$COMMIT_SHA'
+  - 'asia-northeast1-docker.pkg.dev/$PROJECT_ID/age-questionnaire/app:$BUILD_ID'
+
