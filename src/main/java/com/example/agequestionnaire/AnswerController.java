@@ -35,7 +35,6 @@ public class AnswerController {
     public static class Answer {
         public String gender;
         public String ageGroup;
-        public String favoriteGame;
         public String comment;
     }
 
@@ -51,10 +50,6 @@ public class AnswerController {
                 || !isAllowed(answer.ageGroup,
                         "10代以下", "20代", "30代",
                         "40代", "50代", "60代以上")
-                || !isAllowed(answer.favoriteGame,
-                        "Game1", "Game2", "Game3",
-                        "Game4", "Game5", "Game6",
-                        "Game7", "Game8", "Game9")
                 || (answer.comment != null
                         && answer.comment.length() > 500)) {
 
@@ -87,7 +82,7 @@ public class AnswerController {
 
                 // CSVヘッダー
                 csv.append(
-                    "回答日時,性別,年代,一番面白かったゲーム,コメント\n"
+                    "回答日時,性別,年代,コメント\n"
                 );
             }
 
@@ -99,7 +94,6 @@ public class AnswerController {
             csv.append(escapeCsv(timestamp)).append(',')
                     .append(escapeCsv(answer.gender)).append(',')
                     .append(escapeCsv(answer.ageGroup)).append(',')
-                    .append(escapeCsv(answer.favoriteGame)).append(',')
                     .append(escapeCsv(answer.comment)).append('\n');
 
             // CSVファイルに保存
